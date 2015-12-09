@@ -1,23 +1,35 @@
 #!/bin/bash
-# from https://jamfnation.jamfsoftware.com/discussion.html?id=11307#responseChild86288
 
-#
-# Function to grab a string from a json formatted file
-#
+# List_Chrome_Extensions.bash
 
+# Copyright (c) Joel Reid 2015
+# Distributed under the MIT License (terms at http://opensource.org/licenses/MIT)
+# https://github.com/joelreid
+# adapted from script by jrwilcox:
+# https://jamfnation.jamfsoftware.com/discussion.html?id=11307#responseChild86288
+
+
+# config _________________________________________________
+
+# "no" for stdout, "yes" to add Extension Attribute tags. (string! no bools in bash)
+casperEA="yes";
+# script lists exts of all users, except these. (a single string, space delimited)
+skipUsers="itc _itc rihmaster _rihmaster";
+
+
+# functions ______________________________________________
+
+# wow
 function jsonval {
     temp=`echo $json | sed -e 's/\\\\\//\//g' -e 's/[{}]//g' | awk -v k="text" '{n=split($0,a,","); for (i=1; i<=n; i++) print a[i]}' | sed -e 's/\"\:\"/\|/g' -e 's/\]//' -e 's/[\,]/ /g' -e 's/\"//g' | grep -w $property | tail -1`
     echo ${temp##*|}
 }
 
-#
-# Function to do one users extensions
-#
-
+# list one user's extensions
 function getuserextensions {
-    cd "/Users/${loggedInUser}/Library/Application Support/Google/Chrome/Default/Extensions"
+    cd "/Users/${thisUser}/Library/Application Support/Google/Chrome/Default/Extensions"
     for d in *; do
-        JSONS=$( find "/Users/${loggedInUser}/Library/Application Support/Google/Chrome/Default/Extensions/$d" -maxdepth 3 -name "manifest.json" )
+        JSONS=$( find "/Users/${thisUser}/Library/Application Support/Google/Chrome/Default/Extensions/$d" -maxdepth 3 -name "manifest.json" )
         while read JSON; do
             NAME=$( awk -F'"' '/"name"/{print $4}' "$JSON" )
         done < <(echo "$JSONS")
@@ -35,23 +47,34 @@ function getuserextensions {
             fi
         fi
         if [ "${#d}" -eq 32 ];then
-            EXTS+=( "${NAME} • ${d}\n" )
+            EXTS+=( "${thisUser} • ${NAME} • ${d}\n" )
         fi
     done
 }
 
-#
-# Main Body of code
-#
 
-loggedInUser=$( ls -l /dev/console | awk '{print $3}' )
-if [ ! -d "/Users/${loggedInUser}/Library/Application Support/Google/Chrome/Default/Extensions" ]; then
-    echo "<result>No User logged in unable to check</result>"
-    exit 0
-fi
-curdir=${PWD}
-getuserextensions
-cd "$curdir"
-echo "<result>$(echo -e "${EXTS[@]}" | sed -e 's/^[ \t]*//' -e '/^$/d' | sort )</result>"
-exit 0
+# main __________________________________________________
 
+# populate the list of user accounts to walk, strip in-built os users
+userList="$(dscl . list /Users uid | awk '$2 >= 100 && $0 !~ /^_/ {print $1}')";
+for thisUser in $userList; do
+	# make sure we're not testing an exempt user (populated in #config)
+	for skipTest in ${skipUsers}; do
+		if [ $thisUser = $skipTest ]; then thisUser="skip"; fi
+	done
+	if [ $thisUser = "skip" ]; then
+		result+="${thisUser} • In exempt users list"$'\n';
+		continue;
+	fi
+	if [ ! -d "/Users/${thisUser}/Library/Application Support/Google/Chrome/Default/Extensions" ]; then
+		result+="${thisUser} • No Extensions Found"$'\n';
+		continue;
+	fi
+	getuserextensions
+done
+
+if [ "$casperEA" = "yes" ]; then echo "<result>"; fi
+echo "User • Chrome Extension • Extension ID";
+echo -e "${EXTS[@]}" | sed -e 's/^[ \t]*//' -e '/^$/d' -e 's/  / /' | sort ;
+if [ "$casperEA" = "yes" ]; then echo "</result>"; fi
+exit 0;
