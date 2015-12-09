@@ -12,9 +12,9 @@
 # config _________________________________________________
 
 # "no" for stdout, "yes" to add Extension Attribute tags. (string! no bools in bash)
-casperEA="yes";
-# script lists exts of all users, except these. (a single string, space delimited)
-skipUsers="itc _itc rihmaster _rihmaster";
+casperEA="no";
+# script lists exts of all users except these. (a single string, space delimited)
+skipUsers="alice bob liz.smith guest";
 
 
 # functions ______________________________________________
@@ -47,7 +47,7 @@ function getuserextensions {
             fi
         fi
         if [ "${#d}" -eq 32 ];then
-            EXTS+=( "${thisUser} • ${NAME} • ${d}\n" )
+            EXTS+=( "${thisUser} • ${NAME} • ${d} __\n" )
         fi
     done
 }
@@ -63,18 +63,18 @@ for thisUser in $userList; do
 		if [ $thisUser = $skipTest ]; then thisUser="skip"; fi
 	done
 	if [ $thisUser = "skip" ]; then
-		result+="${thisUser} • In exempt users list"$'\n';
+		result+="${thisUser} • In exempt users list __"$'\n';
 		continue;
 	fi
 	if [ ! -d "/Users/${thisUser}/Library/Application Support/Google/Chrome/Default/Extensions" ]; then
-		result+="${thisUser} • No Extensions Found"$'\n';
+		result+="${thisUser} • No Extensions Found __"$'\n';
 		continue;
 	fi
 	getuserextensions
 done
 
 if [ "$casperEA" = "yes" ]; then echo "<result>"; fi
-echo "User • Chrome Extension • Extension ID";
+echo "User • Chrome Extension • Extension ID __";
 echo -e "${EXTS[@]}" | sed -e 's/^[ \t]*//' -e '/^$/d' -e 's/  / /' | sort ;
 if [ "$casperEA" = "yes" ]; then echo "</result>"; fi
 exit 0;
