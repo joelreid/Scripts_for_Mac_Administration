@@ -4,11 +4,14 @@
 #  Copyright (c) Joel Reid 2015
 #  Distributed under the MIT License (terms at http://opensource.org/licenses/MIT)
 #  Sadly unsure of original author
-#  adapted from a script snipped posted unattributed. possibly adapted from:
+#  adapted from a script snippet posted unattributed. possibly adapted from:
 #  https://github.com/glarizza/cart-examples/blob/master/Printer_Installation/preflight
 
+#  Usage:
+# Straightforward enough. Just make sure to install the required drivers first
+# if you're not using generic.
 
-# Make sure to install the required drivers first!
+# Config _________________________________________________
 # Variables. Edit these.
 printername=""
 location=""

@@ -1,5 +1,8 @@
 # LPD Printer Queue via CocoaDialog List
 
+## UNFINISHED
+lpdFromList.bash is a work in progress.
+
 Presents a menu of a server/printer's queues [hardcoded in script], then creates a local printer queue for the selected remote queue.
 
 Drivers must be installed in advance!
